@@ -6,15 +6,8 @@
       </div>
     </h2>
   </div>
-  <div class="panel-body" *ngFor="let contact of contacts">
-    <a href="#" class="list-group-item clearfix">
-      <p>{{contact.name}}</p>
-      <span class="pull-right">
-      <img src="{{contact?.imageUrl}}"
-           alt="{{contact.name}}"
-           class="img-responsive" style="max-height: 75px; border-radius: 5px">
-        </span>
-    </a>
+  <div class="panel-body">
+    <cms-contact-item *ngFor="let contact of contacts" [contact]="contact" (click)="onSelected(contact)"></cms-contact-item>
   </div>
 </div>
 
