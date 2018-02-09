@@ -1,4 +1,4 @@
-import {Component, Input, OnInit,} from '@angular/core';
+import {Component, Input, OnInit, Output } from '@angular/core';
 import {Contact} from "../contacts/contact.model";
 
 @Component({
@@ -8,6 +8,7 @@ import {Contact} from "../contacts/contact.model";
 })
 export class DocumentsComponent implements OnInit {
   @Input() documents: string;
+  @Output() selectedDocument: Document; //not sure if this is really an output variable
   constructor() { }
 
   ngOnInit() {
