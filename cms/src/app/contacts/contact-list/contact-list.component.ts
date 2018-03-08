@@ -17,6 +17,11 @@ export class ContactListComponent implements OnInit {
   }
 
   ngOnInit() {
+    this.contactService.contactChangedEvent.subscribe(
+      (contacts: Contact[]) => [
+        this.contacts = contacts
+      ]
+    )
   }
 
   //create a function that gets the selectedContactEvent and emits the contact stuff to the parent??

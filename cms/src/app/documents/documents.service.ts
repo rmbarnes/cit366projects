@@ -7,6 +7,7 @@ import { MOCKDOCUMENTS} from "./MOCKDOCUMENTS";
 @Injectable()
 export class DocumentsService {
   private documents: Document[] = [];
+  documentChangedEvent = new EventEmitter<Document[]>();
   documentSelectedEvent = new EventEmitter<Document>();
 
   constructor() {
@@ -25,4 +26,16 @@ export class DocumentsService {
     }
     return null;
   };
+
+  deleteDocument(document: Document) {
+    if (document == null) {
+      return;
+    }
+    const pos = this.documents.indexOf(document);
+    if (pos < 0) {
+      return;
+    }
+    this.documents.splice(pos, 1);
+    this.documentChangedEvent.emit(this.documents.slice());
+  }
 }
