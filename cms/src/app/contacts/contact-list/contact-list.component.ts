@@ -1,16 +1,18 @@
-import { Component, OnInit } from '@angular/core';
+import {Component, OnDestroy, OnInit} from '@angular/core';
 
 import { Contact } from '../contact.model';
 
 import { ContactService } from "../contact.service";
+import {Subscription} from "rxjs/Subscription";
 
 @Component({
   selector: 'cms-contact-list',
   templateUrl: './contact-list.component.html',
   styleUrls: ['./contact-list.component.css']
 })
-export class ContactListComponent implements OnInit {
+export class ContactListComponent implements OnInit, OnDestroy {
   contacts: Contact[] = [];
+  subscription: Subscription;
   constructor(private contactService: ContactService) {
     this.contacts = this.contactService.getContacts();
 
@@ -22,6 +24,14 @@ export class ContactListComponent implements OnInit {
         this.contacts = contacts
       ]
     )
+    this.subscription = this.contactService.contactListChangedEvent.subscribe(
+      (contactsList: Contact[]) => {
+        this.contacts = contactsList;
+      }
+    )
+  }
+  ngOnDestroy() {
+    this.subscription.unsubscribe();
   }
 
   //create a function that gets the selectedContactEvent and emits the contact stuff to the parent??
