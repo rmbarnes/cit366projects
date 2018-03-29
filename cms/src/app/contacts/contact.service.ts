@@ -4,6 +4,8 @@ import { Contact } from "./contact.model";
 
 import { MOCKCONTACTS} from "./MOCKCONTACTS";
 import {Subject} from "rxjs/Subject";
+import 'rxjs/Rx';
+import {Headers, Http, Response} from "@angular/http";
 
 @Injectable()
 export class ContactService {
@@ -14,8 +16,8 @@ export class ContactService {
   contactsListClone: Contact[] = [];
   maxContactId: number;
 
-  constructor() {
-    this.contacts = MOCKCONTACTS;
+  constructor(private http: Http) {
+    this.inItContacts();
   }
 
   getContacts(): Contact[] {
@@ -37,8 +39,9 @@ export class ContactService {
     }
     this.maxContactId++;
     newContact.id = this.maxContactId.toString();
+    this.contacts.push(newContact);
     this.contactsListClone = this.contacts.slice();
-    this.contactListChangedEvent.next(this.contactsListClone);
+    this.storeContacts();
   }
 
   updateContact(originalContact: Contact, newContact: Contact) {
@@ -53,7 +56,7 @@ export class ContactService {
     newContact.id = originalContact.id.slice();
     this.contacts[pos] = newContact;
     this.contactsListClone = this.contacts.slice();
-    this.contactListChangedEvent.next(this.contactsListClone);
+    this.storeContacts();
   }
 
   deleteContact(contact: Contact) {
@@ -64,9 +67,9 @@ export class ContactService {
     if (pos < 0) {
       return;
     }
-    this.contacts = this.contacts.splice(pos, 1);
+    this.contacts.splice(pos, 1);
     this.contactsListClone = this.contacts.slice();
-    this.contactListChangedEvent.next(this.contactsListClone);
+    this.storeContacts();
   }
 
   getMaxId(): number {
@@ -79,5 +82,30 @@ export class ContactService {
       }
     }
     return maxId;
+  }
+
+  inItContacts() {
+    return this.http.get('https://cit366project.firebaseio.com/contacts.json')
+      .map(
+        (response: Response) => {
+          const data = response.json();
+          return data;
+        }
+      ).subscribe((contactsReturned: Contact[]) => {
+        this.contacts = contactsReturned;
+        this.maxContactId = this.getMaxId();
+        this.contactListChangedEvent.next(this.contacts.slice());
+      });
+  }
+
+  storeContacts() {
+    JSON.stringify(this.contacts);
+    const headers = new Headers({'Content-Type': 'application/json'});
+    return this.http.put('https://cit366project.firebaseio.com/contacts.json',
+      this.contacts,
+      {headers: headers})
+      .subscribe(() =>
+        this.contactListChangedEvent.next(this.contacts.slice())
+      )
   }
 }

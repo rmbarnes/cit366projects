@@ -4,6 +4,9 @@ import { Document} from "./document.model";
 import { MOCKDOCUMENTS} from "./MOCKDOCUMENTS";
 import {Subject} from "rxjs/Subject";
 
+import 'rxjs/Rx';
+import {Headers, Http, Response} from "@angular/http";
+
 @Injectable()
 export class DocumentsService implements OnDestroy {
   private documents: Document[] = [];
@@ -13,11 +16,8 @@ export class DocumentsService implements OnDestroy {
   documentSelectedEvent = new EventEmitter<Document>();
   documentListChangedEvent = new Subject<Document[]>();
 
-  constructor() {
-    this.documents = MOCKDOCUMENTS;
-    this.maxDocumentId = this.getMaxId();
-
-
+  constructor(private http: Http) {
+    this.inItDocuments();
   }
   //Do I need this here?????? And is it on the listChangedEvent?
   ngOnDestroy() {
@@ -45,7 +45,8 @@ export class DocumentsService implements OnDestroy {
       newDocument.id = this.maxDocumentId.toString();
       this.documents.push(newDocument);
       this.documentsListClone = this.documents.slice();
-      this.documentListChangedEvent.next(this.documentsListClone);
+      this.storeDocuments();
+
   }
 
   updateDocument(originalDocument: Document, newDocument: Document)
@@ -61,7 +62,7 @@ export class DocumentsService implements OnDestroy {
     newDocument.id = originalDocument.id.slice();
     this.documents[pos] = newDocument;
     this.documentsListClone = this.documents.slice();
-    this.documentListChangedEvent.next(this.documentsListClone);
+    this.storeDocuments();
   }
 
   deleteDocument(document: Document) {
@@ -72,9 +73,9 @@ export class DocumentsService implements OnDestroy {
     if (pos < 0) {
       return;
     }
-    this.documents = this.documents.splice(pos, 1);
+    this.documents.splice(pos, 1);
     this.documentsListClone = this.documents.slice();
-    this.documentListChangedEvent.next(this.documentsListClone);
+    this.storeDocuments();
   }
 
   getMaxId(): number {
@@ -87,5 +88,30 @@ export class DocumentsService implements OnDestroy {
       }
     }
     return maxId;
+  }
+
+  inItDocuments() {
+      return this.http.get('https://cit366project.firebaseio.com/documents.json')
+        .map(
+          (response: Response) => {
+            const data = response.json();
+            return data;
+          }
+        ).subscribe((documentsReturned: Document[]) => {
+          this.documents = documentsReturned;
+          this.maxDocumentId = this.getMaxId();
+          this.documentListChangedEvent.next(this.documents.slice());
+        });
+  }
+
+  storeDocuments() {
+    JSON.stringify(this.documents);
+    const headers = new Headers({'Content-Type': 'application/json'});
+    return this.http.put('https://cit366project.firebaseio.com/documents.json',
+      this.documents,
+      {headers: headers})
+      .subscribe(() =>
+      this.documentListChangedEvent.next(this.documents.slice())
+      )
   }
 }

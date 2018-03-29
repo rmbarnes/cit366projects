@@ -13,6 +13,7 @@ import {Subscription} from "rxjs/Subscription";
 export class ContactListComponent implements OnInit, OnDestroy {
   contacts: Contact[] = [];
   subscription: Subscription;
+  term: string;
   constructor(private contactService: ContactService) {
     this.contacts = this.contactService.getContacts();
 
@@ -37,5 +38,9 @@ export class ContactListComponent implements OnInit, OnDestroy {
   //create a function that gets the selectedContactEvent and emits the contact stuff to the parent??
   onSelected(contact: Contact) {
     this.contactService.contactSelectedEvent.emit(contact);
+  }
+
+  onKeyPress(value: string) {
+    this.term = value;
   }
 }
