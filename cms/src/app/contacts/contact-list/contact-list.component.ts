@@ -4,6 +4,7 @@ import { Contact } from '../contact.model';
 
 import { ContactService } from "../contact.service";
 import {Subscription} from "rxjs/Subscription";
+import {Message} from "../../messages/message.model";
 
 @Component({
   selector: 'cms-contact-list',
@@ -25,11 +26,13 @@ export class ContactListComponent implements OnInit, OnDestroy {
         this.contacts = contacts
       ]
     )
-    this.subscription = this.contactService.contactListChangedEvent.subscribe(
+
+    this.subscription = this.contactService.contactListChangedEvent
+      .subscribe(
       (contactsList: Contact[]) => {
         this.contacts = contactsList;
       }
-    )
+    );
   }
   ngOnDestroy() {
     this.subscription.unsubscribe();

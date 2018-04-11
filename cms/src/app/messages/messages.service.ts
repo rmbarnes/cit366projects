@@ -4,8 +4,9 @@ import { Message } from "./message.model";
 import { MOCKMESSAGES} from "./MOCKMESSAGES";
 import {Document} from "../documents/document.model";
 import 'rxjs/Rx';
-import {Headers, Http, Response} from "@angular/http";
+import {HttpHeaders, HttpClient, HttpResponse} from "@angular/common/http";
 import {Subject} from "rxjs/Subject";
+import {Contact} from "../contacts/contact.model";
 
 @Injectable()
 export class MessagesService {
@@ -14,14 +15,31 @@ export class MessagesService {
   maxMessageId: number;
   messageListChangedEvent = new Subject<Message[]>();
 
-
-  constructor(private http: Http) {
+  constructor(private http: HttpClient) {
     this.inItMessages();
   }
 
   getMessages(): Message[] {
-    return this.messages.slice();
+
+    if (this.messages.length > 0) {
+      return this.messages.slice();
+    }
+
+    //this is the same stuff as the initMessages()
+    this.http.get('http://localhost:3000/messages')
+      .map((response: any) => {
+        return response.obj;
+      })
+      .subscribe((messagesReturned: Message[]) => {
+        this.messages = messagesReturned;
+        this.maxMessageId = this.getMaxId();
+        this.messageListChangedEvent.next(this.messages.slice());
+        return this.messages.slice();
+      });
+
   }
+
+
   getMessage(id: string): Message {
     for (let message of this.messages) {
       if (message.id == id) {
@@ -29,11 +47,28 @@ export class MessagesService {
       }
     }
     return null;
-  }
+  };
+
   addMessage(message: Message) {
-    this.messages.push(message);
-    this.messageChangeEvent.emit(this.messages.slice());
-    this.storeMessages();
+    if (!message) {
+      return;
+    }
+    const headers = new HttpHeaders({
+      'Content-Type': 'application/json'
+    });
+
+    message.id = '';
+    const strMessage = JSON.stringify(message);
+
+    this.http.post('http://localhost:3000/messages', strMessage, {headers: headers})
+      .map((response: any) => {
+        return response.obj;
+      })
+      .subscribe(
+        (messages: Message[]) => {
+        this.messages = messages;
+        this.messageChangeEvent.next(this.messages.slice());
+      });
   }
 
   getMaxId(): number {
@@ -49,13 +84,11 @@ export class MessagesService {
   }
 
   inItMessages() {
-    return this.http.get('https://cit366project.firebaseio.com/messages.json')
-      .map(
-        (response: Response) => {
-          const data = response.json();
-          return data;
-        }
-      ).subscribe((messagesReturned: Message[]) => {
+    return this.http.get('http://localhost:3000/messages')
+      .map((response: any) => {
+        return response.obj;
+      })
+      .subscribe((messagesReturned: Message[]) => {
         this.messages = messagesReturned;
         this.maxMessageId = this.getMaxId();
         this.messageListChangedEvent.next(this.messages.slice());
@@ -64,7 +97,7 @@ export class MessagesService {
 
   storeMessages() {
     JSON.stringify(this.messages);
-    const headers = new Headers({'Content-Type': 'application/json'});
+    const headers = new HttpHeaders({'Content-Type': 'application/json'});
     return this.http.put('https://cit366project.firebaseio.com/messages.json',
       this.messages,
       {headers: headers})

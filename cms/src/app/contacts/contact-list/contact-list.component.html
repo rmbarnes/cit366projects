@@ -9,7 +9,9 @@
         <input class="form-control" placeholder="Enter search value"
                type="text" (keypress)="onKeyPress(searchBox.value)"
                #searchBox>
+
         <div class="glyphicon glyphicon glyphicon-search input-group-addon" (click)="search(searchBox.value)"></div>
+
       </div>
       <div class="pull-right pad-left-right">
         <a class="btn btn-success" [routerLink]="['new']">New Contact</a>
@@ -17,9 +19,10 @@
     </div>
   </div>
   <div class="panel-body">
-    <cms-contact-item *ngFor="let contact of contacts | contactsFilter: [term]" [contact]="contact"
+    <cms-contact-item *ngFor="let contact of contacts" [contact]="contact"
     dnd-draggable [dragEnabled]="true" [dragData]="contact" [dropZones]="['contactGroup']">
     </cms-contact-item>
+    <!-- | contactsFilter: [term]-->
   </div>
 </div>
 
